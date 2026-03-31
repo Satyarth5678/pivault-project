@@ -22,6 +22,19 @@ exports.getSystemInfo = () => {
             }
         }
 
+        // 🔥 CPU TEMP FUNCTION (SAFE ADDITION)
+        const getCpuTemp = (callback) => {
+            if (os.platform() === "linux") {
+                exec("cat /sys/class/thermal/thermal_zone0/temp", (err, stdout) => {
+                    if (err) return callback("N/A");
+                    const temp = (parseInt(stdout) / 1000).toFixed(1);
+                    callback(`${temp} °C`);
+                });
+            } else {
+                callback("Not Available");
+            }
+        };
+
         // -------- DISK (Development - Windows) --------
         if (process.env.NODE_ENV === "development") {
 
@@ -50,14 +63,18 @@ exports.getSystemInfo = () => {
                     }
                 });
 
-                return resolve({
-                    cpuModel: os.cpus()[0].model,
-                    ramUsage,
-                    uptime: `${uptimeHours} hours`,
-                    platform: os.platform(),
-                    lanIP,
-                    tailscaleIP: "Simulated",
-                    disks
+                // 🔥 Inject CPU temp here
+                getCpuTemp((cpuTemp) => {
+                    return resolve({
+                        cpuModel: os.cpus()[0].model,
+                        cpuTemp, // 🔥 NEW FIELD
+                        ramUsage,
+                        uptime: `${uptimeHours} hours`,
+                        platform: os.platform(),
+                        lanIP,
+                        tailscaleIP: "Simulated",
+                        disks
+                    });
                 });
             });
 
@@ -87,14 +104,18 @@ exports.getSystemInfo = () => {
                 exec("tailscale ip -4", (err2, stdout2) => {
                     let tailscaleIP = err2 ? "Not connected" : stdout2.trim();
 
-                    resolve({
-                        cpuModel: os.cpus()[0].model,
-                        ramUsage,
-                        uptime: `${uptimeHours} hours`,
-                        platform: os.platform(),
-                        lanIP,
-                        tailscaleIP,
-                        disks
+                    // 🔥 Inject CPU temp here
+                    getCpuTemp((cpuTemp) => {
+                        resolve({
+                            cpuModel: os.cpus()[0].model,
+                            cpuTemp, // 🔥 NEW FIELD
+                            ramUsage,
+                            uptime: `${uptimeHours} hours`,
+                            platform: os.platform(),
+                            lanIP,
+                            tailscaleIP,
+                            disks
+                        });
                     });
                 });
             });

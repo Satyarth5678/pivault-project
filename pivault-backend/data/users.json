@@ -1,0 +1,26 @@
+[
+  {
+    "username": "admin",
+    "password": "$2b$10$MTehWQ3zLmCy93F4/Xxgx.BAFmhryWqkCPqcmfpwxJ0eimaYqZYv6",
+    "role": "admin",
+    "storageLimit": 10000
+  },
+  {
+    "username": "user1",
+    "password": "$2b$10$H5rTKJm.zffuKvKUbnvyvOMazqRCVzdBA2OAvAD7xYa5GBKlN9lA2",
+    "role": "user",
+    "storageLimit": 500
+  },
+  {
+    "username": "satty",
+    "password": "$2b$10$mnHayn1tVH/Ou9ygACJEE.SyCkYw73.l/gS2zd89NLHUMDpH1r8bK",
+    "role": "user",
+    "storageLimit": 500
+  },
+  {
+    "username": "utkarsh",
+    "password": "$2b$10$/43R4Jrd8BGS0TT0g8wAJu0F/Ka5qwqv8eeuc9LbPCXwxswhOb.NO",
+    "role": "user",
+    "storageLimit": 100
+  }
+]
