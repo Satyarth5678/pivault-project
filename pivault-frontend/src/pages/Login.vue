@@ -20,10 +20,11 @@ const router = useRouter();
 
 const username = ref("");
 const password = ref("");
+const API ="/api"
 
 const login = async () => {
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+    const res = await fetch(`/api/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -34,27 +35,33 @@ const login = async () => {
       }),
     });
 
-    const data = await res.json();
+    const text = await res.text();
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      console.error("Invalid JSON:", text);
+      alert("Server error (invalid response)");
+      return;
+    }
 
     if (!res.ok) {
       alert(data.message || "Login failed");
       return;
     }
 
-    // ✅ STORE
+    // ✅ SAVE TOKEN
     localStorage.setItem("token", data.token);
-    localStorage.setItem("username", data.username); // 🔥 FIXED
+    localStorage.setItem("username", data.username);
     localStorage.setItem("role", data.role);
 
-    // 🔄 update navbar
-    window.dispatchEvent(new Event("storage"));
-
-    // ✅ ONLY THIS
-    router.push("/dashboard");
+    // 🔥 VERY IMPORTANT (THIS WAS MISSING)
+    window.location.href = "/";
 
   } catch (err) {
     console.error("LOGIN ERROR:", err);
-    alert("Server error");
+    alert("Something went wrong");
   }
 };
 </script>

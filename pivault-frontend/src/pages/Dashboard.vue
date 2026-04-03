@@ -4,13 +4,39 @@
     <div v-if="loading">Loading...</div>
 
     <div v-else-if="error">Error ❌</div>
+<div v-else>
+  <p>CPU: {{ data?.cpuModel || "N/A" }}</p>
+  <p>RAM: {{ data?.ramUsage || "N/A" }}</p>
+  <p>LAN: {{ data?.lanIP || "N/A" }}</p>
+  <p>Tailscale: {{ data?.tailscaleIP || "N/A" }}</p>
+  <p>CPU Temp: {{ data?.cpuTemp || "N/A" }}</p>
 
-    <div v-else>
-      <p>CPU: {{ data?.cpuModel || "N/A" }}</p>
-      <p>RAM: {{ data?.ramUsage || "N/A" }}</p>
-      <p>LAN: {{ data?.lanIP || "N/A" }}</p>
-      <p>Tailscale: {{ data?.tailscaleIP || "N/A" }}</p>
-    </div>
+  <!-- 🔥 DISK HEALTH -->
+  <div class="mt-4 p-3 bg-gray-800 rounded">
+    <h3 class="font-bold mb-2">Disk Health</h3>
+
+    <p>Status: {{ data?.diskHealth?.status || "N/A" }}</p>
+    <p>Temperature: {{ data?.diskHealth?.temperature || "N/A" }}</p>
+
+    <hr class="my-2 border-gray-600" />
+
+    <p class="text-sm text-gray-400">
+      Device: {{ data?.diskHealth?.device || "N/A" }}
+    </p>
+
+    <p class="text-sm text-gray-400">
+      Serial: {{ data?.diskHealth?.serial || "N/A" }}
+    </p>
+
+    <p class="text-sm text-gray-400">
+      Power Hours: {{ data?.diskHealth?.powerOnHours || "N/A" }}
+    </p>
+
+    <p class="text-sm text-gray-400">
+      Reallocated Sectors: {{ data?.diskHealth?.reallocatedSectors || "0" }}
+    </p>
+  </div>
+</div>
 
   </div>
 </template>
@@ -29,7 +55,7 @@ export default {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/system`, {
+      const res = await fetch(`/api/system`, {
         headers: {
           Authorization: "Bearer " + token,
         },

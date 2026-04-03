@@ -16,9 +16,7 @@
       <h2 class="text-lg font-semibold mb-2">Current Status</h2>
       <p>
         Status:
-        <span
-          :class="status.includes('progress') ? 'text-yellow-400' : 'text-green-400'"
-        >
+        <span class="text-green-400">
           {{ status }}
         </span>
       </p>
@@ -43,22 +41,17 @@
           :key="job.id"
           class="bg-gray-800 p-3 rounded flex justify-between items-center"
         >
-          <!-- LEFT -->
           <div>
             <p class="font-bold">Job ID: {{ job.id }}</p>
-
             <p class="text-sm text-gray-400">
               {{ job.startTime }}
             </p>
-
             <p class="text-sm text-gray-400">
               Duration: {{ job.durationSeconds }} sec
             </p>
           </div>
 
-          <!-- RIGHT -->
           <div class="flex items-center space-x-3">
-            <!-- TYPE BADGE -->
             <span
               class="text-white text-xs px-3 py-1 rounded"
               :class="getBackupColor(job.type)"
@@ -66,12 +59,10 @@
               {{ formatType(job.type) }}
             </span>
 
-            <!-- STATUS -->
             <span class="text-sm text-gray-300">
               {{ job.status }}
             </span>
 
-            <!-- RESTORE -->
             <button
               v-if="role === 'admin'"
               @click="restoreBackup(job.name)"
@@ -94,21 +85,15 @@ const history = ref([]);
 const role = localStorage.getItem("role");
 const token = localStorage.getItem("token");
 
-// 🎨 Color mapping
 const getBackupColor = (type) => {
   switch (type) {
-    case "manual":
-      return "bg-blue-500";
-    case "auto-daily":
-      return "bg-green-500";
-    case "auto-weekly":
-      return "bg-purple-500";
-    default:
-      return "bg-gray-500";
+    case "manual": return "bg-blue-500";
+    case "auto-daily": return "bg-green-500";
+    case "auto-weekly": return "bg-purple-500";
+    default: return "bg-gray-500";
   }
 };
 
-// 🏷 Label formatting
 const formatType = (type) => {
   if (type === "manual") return "Manual";
   if (type === "auto-daily") return "Daily";
@@ -116,97 +101,83 @@ const formatType = (type) => {
   return type || "Unknown";
 };
 
-// 🔁 AUTO REFRESH
 let interval = null;
 
 onMounted(() => {
-  loadStatus();
-  loadHistory();
-
-  interval = setInterval(() => {
-    loadHistory();
-    loadStatus();
-  }, 5000);
+  fetchData();
+  interval = setInterval(fetchData, 5000);
 });
 
 onUnmounted(() => {
   clearInterval(interval);
 });
 
-// ▶ Start backup
 const startBackup = async () => {
   try {
-    status.value = "Backup in progress...";
+    status.value = "Running...";
 
-    const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/backup/run`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer " + token
-        }
+    const res = await fetch("/api/backup/start", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + token
       }
-    );
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      status.value = "Completed ✅";
+    } else {
+      status.value = "Failed ❌";
+    }
+
+    await fetchData();
+
+  } catch (err) {
+    console.error(err);
+    status.value = "Failed ❌";
+  }
+};
+
+const restoreBackup = async (name) => {
+  try {
+    const res = await fetch("/api/backup/restore", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ backup: name })
+    });
 
     const data = await res.json();
 
     status.value = data.message;
 
-    await loadHistory();
-
   } catch (err) {
     console.error(err);
-    status.value = "Backup failed";
+    status.value = "Restore failed ❌";
   }
 };
 
-// 🔁 Restore
-const restoreBackup = async (name) => {
-  const res = await fetch(
-    `${import.meta.env.VITE_API_URL}/api/backup/restore?backup=${name}&role=${role}`,
-    {
-      method: "POST",
-      headers: { Authorization: "Bearer " + token }
-    }
-  );
-
-  const data = await res.json();
-  status.value = data.message;
-};
-
-// 📊 Status
-const loadStatus = async () => {
+const fetchData = async () => {
   try {
-    const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/backup/status?role=${role}`,
-      {
-        headers: { Authorization: "Bearer " + token }
-      }
-    );
+    const statusRes = await fetch("/api/backup/status", {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const statusData = await statusRes.json();
 
-    const data = await res.json();
+    status.value = statusData.status;
 
-    if (data.running) {
-      status.value = "Backup in progress...";
-    } else {
-      status.value = "Idle / Ready";
-    }
+    const historyRes = await fetch("/api/backup/history", {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const historyData = await historyRes.json();
+
+    history.value = Array.isArray(historyData) ? historyData : [];
 
   } catch (err) {
-    console.error(err);
+    console.error("Fetch error:", err);
   }
-};
-
-// 📜 History
-const loadHistory = async () => {
-  const res = await fetch(
-    `${import.meta.env.VITE_API_URL}/api/backup/history?role=${role}`,
-    {
-      headers: { Authorization: "Bearer " + token }
-    }
-  );
-
-  const data = await res.json();
-  history.value = Array.isArray(data.history) ? data.history : [];
 };
 </script>

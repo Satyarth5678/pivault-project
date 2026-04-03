@@ -2,19 +2,9 @@
   <div class="p-6 text-white">
     <h1 class="text-2xl mb-6">Services - User Management</h1><!-- ➕ CREATE USER -->
 <div class="mb-4">
-  <input
-    v-model="newUser.username"
-    placeholder="Username"
-    class="block mb-2 p-2 text-black"
-  />
+  <input v-model="newUser.username" placeholder="Username" class="block mb-2 p-2 text-black" />
+  <input v-model="newUser.password" placeholder="Password" class="block mb-2 p-2 text-black" />
 
-  <input
-    v-model="newUser.password"
-    placeholder="Password"
-    class="block mb-2 p-2 text-black"
-  />
-
-  <!-- STORAGE INPUT -->
   <input
     v-model.number="newUser.storage"
     type="number"
@@ -45,7 +35,7 @@
 
         <p class="text-sm text-gray-400">
           Storage: {{ user.usedStorage || 0 }} MB /
-         {{ user.storageLimit + ' MB' }}
+          {{ user.storageLimit + ' MB' }}
         </p>
       </div>
 
@@ -64,9 +54,9 @@
         class="bg-green-500 h-2"
         :style="{
           width:
-  user.storageLimit
-    ? Math.min((user.usedStorage / user.storageLimit) * 100, 100) + '%'
-    : '0%'
+            user.storageLimit
+              ? Math.min((user.usedStorage / user.storageLimit) * 100, 100) + '%'
+              : '0%'
         }"
       ></div>
     </div>
@@ -77,9 +67,6 @@
 </template><script setup>
 import { ref, onMounted } from "vue";
 
-// =============================
-// STATE
-// =============================
 const users = ref([]);
 
 const newUser = ref({
@@ -89,54 +76,53 @@ const newUser = ref({
 });
 
 const role = localStorage.getItem("role");
+const token = localStorage.getItem("token");
 
 // =============================
-// LOAD USERS
+// LOAD USERS (FIXED)
 // =============================
 const loadUsers = async () => {
   try {
-    const token = localStorage.getItem("token");
-
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users`, {
+    const res = await fetch("/api/users", {
       headers: {
-        Authorization: "Bearer " + token,
-      },
+        Authorization: "Bearer " + token
+      }
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    console.log("USERS RAW:", text);
 
-    users.value = Array.isArray(data) ? data : [];
+    const data = JSON.parse(text);
+    users.value = Array.isArray(data) ? data : data.users || [];
 
   } catch (err) {
-    console.error(err);
+    console.error("LOAD USERS ERROR:", err);
     users.value = [];
   }
 };
 
 // =============================
-// CREATE USER
+// CREATE USER (FIXED)
 // =============================
 const createUser = async () => {
   try {
-    const token = localStorage.getItem("token");
+    const res = await fetch("/api/users/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({
+        username: newUser.value.username,
+        password: newUser.value.password,
+        storageLimit: Number(newUser.value.storage)
+      })
+    });
 
-    const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/users?role=${role}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-        body: JSON.stringify({
-          username: newUser.value.username,
-          password: newUser.value.password,
-          storageLimit: Number(newUser.value.storage),
-        }),
-      }
-    );
+    const text = await res.text();
+    console.log("CREATE USER RAW:", text);
 
-    const data = await res.json();
+    const data = JSON.parse(text);
 
     if (!res.ok) {
       alert(data.message);
@@ -148,38 +134,33 @@ const createUser = async () => {
     newUser.value = {
       username: "",
       password: "",
-      storage: 100,
+      storage: 100
     };
 
-    await loadUsers(); // ✅ no reload needed
+    await loadUsers();
 
   } catch (err) {
-    console.error(err);
+    console.error("CREATE USER ERROR:", err);
     alert("Error creating user");
   }
 };
 
 // =============================
-// DELETE USER
+// DELETE USER (FIXED)
 // =============================
 const deleteUser = async (username) => {
   try {
-    const token = localStorage.getItem("token");
-
-    await fetch(
-  `${import.meta.env.VITE_API_URL}/api/users?username=${username}&role=admin`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: "Bearer " + token,
-        },
+    await fetch(`/api/users/${username}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: "Bearer " + token
       }
-    );
+    });
 
     loadUsers();
 
   } catch (err) {
-    console.error(err);
+    console.error("DELETE USER ERROR:", err);
   }
 };
 

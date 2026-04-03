@@ -124,7 +124,7 @@ const role = localStorage.getItem("role") || "admin";
 const loadUsage = async () => {
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/files/usage?user=${username}&role=${role}`,
+      `/api/files/usage?user=${username}&role=${role}`,
       {
         headers: {
           Authorization: "Bearer " + token,
@@ -156,7 +156,7 @@ const loadFiles = async (type, folder = "") => {
 
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/files?type=${type}&path=${folder}`,
+      `/api/files?type=${type}&path=${folder}`,
       {
         headers: {
           Authorization: "Bearer " + token,
@@ -226,7 +226,7 @@ const goToPath = (index) => {
 const downloadFile = async (fileName) => {
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/files/download?file=${fileName}&path=${currentPath.value}&type=${currentType.value}`,
+      `/api/files/download?file=${fileName}&path=${currentPath.value}&type=${currentType.value}`,
       {
         headers: {
           Authorization: "Bearer " + token,
@@ -259,7 +259,7 @@ const downloadFile = async (fileName) => {
 // =============================
 const deleteFile = async (fileName) => {
   await fetch(
-    `${import.meta.env.VITE_API_URL}/api/files/delete?file=${fileName}&path=${currentPath.value}&type=${currentType.value}`,
+    `/api/files/delete?file=${fileName}&path=${currentPath.value}&type=${currentType.value}`,
     {
       method: "DELETE",
       headers: {
@@ -284,7 +284,7 @@ const handleUpload = async (event) => {
 
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/files/upload?path=${currentPath.value}&type=${currentType.value}`,
+      `/api/files/upload?path=${currentPath.value}&type=${currentType.value}`,
       {
         method: "POST",
         headers: {

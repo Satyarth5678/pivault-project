@@ -1,7 +1,5 @@
-const BASE_URL = `${import.meta.env.VITE_API_URL}/api`; // for dev
-
 export const loginUser = async (username, password) => {
-    const res = await fetch(`${BASE_URL}/auth/login`, {
+    const res = await fetch(`/api/auth/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -12,22 +10,41 @@ export const loginUser = async (username, password) => {
     return res.json();
 };
 
-// 🔥 GET DASHBOARD DATA
 export const getDashboard = async () => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/system`);
+  try {
+    const token = localStorage.getItem("token");
 
-    const data = await res.json();
+    const res = await fetch(`/api/system`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-    if (!res.ok) {
-        throw new Error(data.message || "Failed to load dashboard");
+    const text = await res.text();   // 🔥 DEBUG SAFE
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      console.error("Invalid JSON:", text);
+      throw new Error("Server returned invalid response");
     }
 
-    return { data };
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to load dashboard");
+    }
+
+    return data;
+
+  } catch (err) {
+    console.error("Dashboard Error:", err);
+    throw err;
+  }
 };
 export const getStorage = async () => {
     const token = localStorage.getItem("token");
 
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/status`, {
+    const res = await fetch(`/api/dashboard/status`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },

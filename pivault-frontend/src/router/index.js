@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 
-import Login from "../pages/login.vue";
+import Login from "../pages/Login.vue";
 import Dashboard from "../pages/Dashboard.vue";
 import Storage from "../pages/Storage.vue";
 import Backup from "../pages/Backup.vue";
