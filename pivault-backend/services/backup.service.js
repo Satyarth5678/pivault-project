@@ -27,10 +27,12 @@ let backupState = {
 let backupHistory = [];
 
 // =============================
-// 🔁 COPY FUNCTION
+// 🔁 COPY FUNCTION (FIXED)
 // =============================
 const copyFolder = (src, dest) => {
-    if (!fs.existsSync(src)) return;
+    if (!fs.existsSync(src)) {
+        throw new Error("Source folder does not exist: " + src);
+    }
 
     if (!fs.existsSync(dest)) {
         fs.mkdirSync(dest, { recursive: true });
@@ -51,7 +53,49 @@ const copyFolder = (src, dest) => {
 };
 
 // =============================
-// 🚀 RUN BACKUP (FINAL)
+// 🔄 RESTORE BACKUP (FIXED)
+// =============================
+exports.restoreBackup = async (backupName) => {
+    try {
+        const backupFolder = path.join(BACKUP_PATH, backupName);
+        const destination = path.join(BASE_PATH, "users");
+
+        console.log("🔁 RESTORE START");
+        console.log("Backup:", backupFolder);
+        console.log("Destination:", destination);
+
+        if (!fs.existsSync(backupFolder)) {
+            throw new Error("Backup folder not found");
+        }
+
+        // 🔥 Delete old data
+        if (fs.existsSync(destination)) {
+            fs.rmSync(destination, { recursive: true, force: true });
+        }
+
+        fs.mkdirSync(destination, { recursive: true });
+
+        // 🔥 Copy backup → users
+        copyFolder(backupFolder, destination);
+
+        // 🔥 VERIFY restore
+        const restoredFiles = fs.readdirSync(destination);
+        if (restoredFiles.length === 0) {
+            throw new Error("Restore failed: No files copied");
+        }
+
+        console.log("✅ RESTORE SUCCESS");
+
+        return { success: true, message: "Restore completed successfully" };
+
+    } catch (err) {
+        console.error("❌ RESTORE ERROR:", err.message);
+        return { success: false, message: err.message };
+    }
+};
+
+// =============================
+// 🚀 RUN BACKUP (UNCHANGED)
 // =============================
 exports.runBackup = async (type = "manual") => {
     if (backupState.running) {
@@ -59,8 +103,8 @@ exports.runBackup = async (type = "manual") => {
     }
 
     const jobId = Date.now();
-
     backupState.running = true;
+
     backupState.currentJob = {
         id: jobId,
         type,
@@ -81,7 +125,6 @@ exports.runBackup = async (type = "manual") => {
 
         const source = path.join(BASE_PATH, "users");
 
-        // 🔥 REAL COPY
         copyFolder(source, backupFolder);
 
         const endTime = new Date().toISOString();
@@ -101,7 +144,7 @@ exports.runBackup = async (type = "manual") => {
         backupState.running = false;
         backupState.currentJob = null;
 
-        return { message: "Backup completed successfully" };
+        return { success: true, message: "Backup completed successfully" };
 
     } catch (err) {
         console.error("BACKUP ERROR:", err);
@@ -109,14 +152,18 @@ exports.runBackup = async (type = "manual") => {
         backupState.running = false;
         backupState.currentJob = null;
 
-        return { message: "Backup failed" };
+        return { success: false, message: "Backup failed" };
     }
 };
 
 // =============================
 // 📊 STATUS
 // =============================
-exports.getBackupStatus = () => backupState;
+exports.getBackupStatus = () => {
+    if (backupState.running) return { status: "Running" };
+    if (backupHistory.length > 0) return { status: backupHistory[0].status };
+    return { status: "Idle" };
+};
 
 // =============================
 // 📜 HISTORY

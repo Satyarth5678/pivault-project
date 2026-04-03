@@ -118,44 +118,63 @@ exports.getStorageUsage = (req, res) => {
 // ➕ CREATE USER (FIXED)
 // =============================
 exports.createUser = async (req, res) => {
+  try {
     const { username, password, storageLimit } = req.body;
-    const role = req.query.role;
 
-    if (role !== "admin") {
-        return res.status(403).json({ message: "Admin only" });
+    // 🔐 RBAC CHECK (SECURE)
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin only" });
+    }
+
+    // 🛑 VALIDATION
+    if (!username || !password) {
+      return res.status(400).json({ message: "Username and password required" });
     }
 
     const users = readUsers();
 
+    // 🔍 CHECK USER EXISTS
     if (users.find((u) => u.username === username)) {
-        return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({ message: "User already exists" });
     }
 
+    // 🔐 HASH PASSWORD
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // 👤 CREATE USER OBJECT
     const newUser = {
-        username,
-        password: hashedPassword,
-        role: "user",
-        storageLimit:
-            storageLimit === undefined || storageLimit === null || storageLimit === ""
-                ? 100
-                : Number(storageLimit)// ✅ dynamic + safe
+      username,
+      password: hashedPassword,
+      role: "user",
+      storageLimit:
+        storageLimit === undefined || storageLimit === null || storageLimit === ""
+          ? 100
+          : Number(storageLimit)
     };
 
     users.push(newUser);
     saveUsers(users);
-    console.log("INCOMING:", req.body);
+
+    console.log("✅ USER CREATED:", username);
 
     // 📁 CREATE USER FOLDER
     const userFolder = path.join(BASE_PATH, "users", username);
+
     if (!fs.existsSync(userFolder)) {
-        fs.mkdirSync(userFolder, { recursive: true });
+      fs.mkdirSync(userFolder, { recursive: true });
+      console.log("📁 Folder created:", userFolder);
     }
 
+    // ✅ RESPONSE
     res.json({
-        message: `User ${username} created successfully ✅`,
+      success: true,
+      message: `User ${username} created successfully ✅`
     });
+
+  } catch (err) {
+    console.error("CREATE USER ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 // =============================

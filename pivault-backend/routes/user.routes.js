@@ -5,7 +5,7 @@ const userController = require("../controllers/user.controller");
 
 // ✅ PROTECT ROUTES
 router.get("/", verifyToken, userController.getUsers);
-router.post("/", verifyToken, userController.createUser);
+router.post("/create", verifyToken, userController.createUser);
 router.delete("/", verifyToken, userController.deleteUser);
 
 module.exports = router;

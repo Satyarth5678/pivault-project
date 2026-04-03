@@ -2,17 +2,18 @@ const express = require("express");
 const router = express.Router();
 
 const backupController = require("../controllers/backup.controller");
+const { verifyToken } = require("../middlewares/auth.middleware");
 
-// ✅ RUN BACKUP
-router.post("/run", backupController.runBackup);
+// ✅ RUN BACKUP (FIXED ROUTE NAME)
+router.post("/start", verifyToken, backupController.runBackup);
 
 // ✅ STATUS
-router.get("/status", backupController.getStatus);
+router.get("/status", verifyToken, backupController.getStatus);
 
 // ✅ HISTORY
-router.get("/history", backupController.getBackupHistory);
+router.get("/history", verifyToken, backupController.getBackupHistory);
 
 // ✅ RESTORE
-router.post("/restore", backupController.restoreBackup);
+router.post("/restore", verifyToken, backupController.restoreBackup);
 
 module.exports = router;

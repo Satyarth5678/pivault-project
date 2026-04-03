@@ -3,8 +3,9 @@ const cors = require("cors");
 const fileRoutes = require("./routes/files.routes");
 const app = express();
 
-app.use(cors());
+
 app.use(express.json());
+app.use(cors());
 app.use("/api/dashboard", require("./routes/dashboard.routes"));
 app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/storage", require("./routes/storage.routes"));

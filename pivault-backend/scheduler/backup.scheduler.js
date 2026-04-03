@@ -2,7 +2,7 @@ const cron = require("node-cron");
 const backupService = require("../services/backup.service");
 
 // 🔥 DAILY BACKUP
-cron.schedule("* * * * *", async () => {
+cron.schedule("0 2 * * *", async () => {
     console.log("Running DAILY backup...");
 
     try {

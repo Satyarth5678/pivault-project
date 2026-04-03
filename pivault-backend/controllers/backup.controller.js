@@ -32,7 +32,7 @@ exports.getStatus = (req, res) => {
 exports.getBackupHistory = (req, res) => {
     try {
         const history = backupService.getBackupHistory();
-        res.json({ history });
+        res.json(backupService.getBackupHistory());
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error fetching history" });
@@ -66,31 +66,20 @@ const copyFolderRecursive = (source, target) => {
     });
 };
 
-exports.restoreBackup = (req, res) => {
-    const role = req.query.role;
-    const backupName = req.query.backup;
+exports.restoreBackup = async (req, res) => {
+  try {
+    const backupName = req.body.backup;
 
-    if (role !== "admin") {
-        return res.status(403).json({ message: "Admin only" });
+    if (!backupName) {
+      return res.status(400).json({ message: "Backup name required" });
     }
 
-    try {
-        const backupPath = path.join(BACKUP_PATH, backupName);
-        const targetPath = path.join(BASE_PATH, "users");
+    await backupService.restoreBackup(backupName);
 
-        if (!fs.existsSync(backupPath)) {
-            return res.status(404).json({ message: "Backup not found" });
-        }
+    res.json({ message: "Restore completed successfully" });
 
-        fs.rmSync(targetPath, { recursive: true, force: true });
-        fs.mkdirSync(targetPath, { recursive: true });
-
-        copyFolderRecursive(backupPath, targetPath);
-
-        res.json({ message: "Restore completed successfully" });
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Restore failed" });
-    }
+  } catch (err) {
+    console.error("Restore error:", err);
+    res.status(500).json({ message: "Restore failed" });
+  }
 };
