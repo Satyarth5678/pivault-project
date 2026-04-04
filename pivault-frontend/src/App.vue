@@ -1,5 +1,11 @@
 <template>
-  <div class="flex h-screen">
+  <!-- 🔓 PUBLIC PAGES (NO SIDEBAR / NAVBAR) -->
+  <div v-if="isPublicRoute" class="min-h-screen">
+    <router-view />
+  </div>
+
+  <!-- 🔐 APP PAGES (WITH SIDEBAR + NAVBAR) -->
+  <div v-else class="flex h-screen">
 
     <!-- Sidebar -->
     <Sidebar />
@@ -21,6 +27,15 @@
 </template>
 
 <script setup>
+import { useRoute } from "vue-router";
 import Sidebar from "./components/Sidebar.vue";
 import Navbar from "./components/Navbar.vue";
+
+const route = useRoute();
+
+// ✅ Define public routes (NO sidebar)
+const publicRoutes = ["/", "/login"];
+
+// ✅ Check if current route is public
+const isPublicRoute = publicRoutes.includes(route.path);
 </script>
